@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Dumbbell, Apple, LogOut } from "lucide-react"
+import { BarChart3, Dumbbell, Apple, LogOut, MessageCircle } from "lucide-react"
 import { signOut } from "@/lib/auth-actions"
 import { Button } from "@/components/ui/button"
 
@@ -14,6 +14,7 @@ export function ClientSidebar() {
     { href: "/dashboard/client/workout-plans", label: "Workout Plans", icon: Dumbbell },
     { href: "/dashboard/client/diet-plans", label: "Diet Plans", icon: Apple },
     { href: "/dashboard/client/progress", label: "Progress", icon: BarChart3 },
+    { href: "/dashboard/client/chatbot", label: "Chatbot", icon: MessageCircle },
   ]
 
   return (

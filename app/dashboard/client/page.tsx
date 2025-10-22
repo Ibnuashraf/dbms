@@ -174,6 +174,12 @@ export default async function ClientDashboard() {
                 >
                   Track Progress
                 </a>
+                <a
+                  href="/dashboard/client/chatbot"
+                  className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90"
+                >
+                  Ask AI Assistant
+                </a>
               </CardContent>
             </Card>
           </div>
