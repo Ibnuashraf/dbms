@@ -10,9 +10,8 @@ export async function signUp(email: string, password: string, fullName: string, 
     email,
     password,
     options: {
-      emailRedirectTo:
-        process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
+      // Disable email confirmation for simpler auth
+      emailRedirectTo: undefined,
     },
   })
 
@@ -66,12 +65,36 @@ export async function signIn(email: string, password: string) {
     return { error: error.message }
   }
 
+  // Pre-fetch user role to avoid additional queries after redirect
+  if (data.user) {
+    const { data: userProfile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", data.user.id)
+      .single()
+    
+    return { 
+      data: {
+        ...data,
+        userRole: userProfile?.role
+      }
+    }
+  }
+
   return { data }
 }
 
 export async function signOut() {
   const supabase = await getSupabaseServer()
-  await supabase.auth.signOut()
+  
+  // Sign out from Supabase
+  const { error } = await supabase.auth.signOut()
+  
+  if (error) {
+    console.error("Sign out error:", error)
+  }
+  
+  // Force redirect to login page
   redirect("/auth/login")
 }
 
@@ -85,7 +108,12 @@ export async function getCurrentUser() {
     return null
   }
 
-  const { data: userProfile } = await supabase.from("users").select("*").eq("id", user.id).single()
+  // Only select essential fields to reduce data transfer
+  const { data: userProfile } = await supabase
+    .from("users")
+    .select("id, email, full_name, role")
+    .eq("id", user.id)
+    .single()
 
   return userProfile
 }
@@ -93,4 +121,28 @@ export async function getCurrentUser() {
 export async function getUserRole() {
   const user = await getCurrentUser()
   return user?.role || null
+}
+
+// Optimized function that gets both user and role in a single call
+export async function getCurrentUserWithRole() {
+  const supabase = await getSupabaseServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { user: null, role: null }
+  }
+
+  // Only select the fields we need to reduce data transfer
+  const { data: userProfile } = await supabase
+    .from("users")
+    .select("id, email, full_name, role")
+    .eq("id", user.id)
+    .single()
+
+  return { 
+    user: userProfile, 
+    role: userProfile?.role || null 
+  }
 }

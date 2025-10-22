@@ -73,12 +73,26 @@ CREATE TABLE IF NOT EXISTS diet_plans (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trainer_id UUID NOT NULL REFERENCES trainers(id) ON DELETE CASCADE,
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  membership_plan_id UUID REFERENCES membership_plans(id) ON DELETE SET NULL,
   plan_name VARCHAR(255) NOT NULL,
   description TEXT,
   daily_calories INT,
   protein_grams DECIMAL(6, 2),
   carbs_grams DECIMAL(6, 2),
   fat_grams DECIMAL(6, 2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create membership plans table
+CREATE TABLE IF NOT EXISTS membership_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  plan_name VARCHAR(255) NOT NULL,
+  description TEXT,
+  price DECIMAL(10, 2) NOT NULL,
+  duration_days INT NOT NULL,
+  features TEXT[],
+  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -156,6 +170,7 @@ CREATE INDEX idx_workout_plans_trainer_id ON workout_plans(trainer_id);
 CREATE INDEX idx_workout_plans_client_id ON workout_plans(client_id);
 CREATE INDEX idx_diet_plans_trainer_id ON diet_plans(trainer_id);
 CREATE INDEX idx_diet_plans_client_id ON diet_plans(client_id);
+CREATE INDEX idx_diet_plans_membership_plan_id ON diet_plans(membership_plan_id);
 CREATE INDEX idx_progress_tracking_client_id ON progress_tracking(client_id);
 CREATE INDEX idx_payments_client_id ON payments(client_id);
 CREATE INDEX idx_salary_records_trainer_id ON salary_records(trainer_id);

@@ -36,7 +36,10 @@ export function WorkoutPlanForm({ clientId, onSuccess }: WorkoutPlanFormProps) {
 
     try {
       await createWorkoutPlan(data)
-      e.currentTarget.reset()
+      // Safely reset the form
+      if (e.currentTarget) {
+        e.currentTarget.reset()
+      }
       onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create workout plan")

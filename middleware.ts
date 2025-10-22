@@ -21,25 +21,33 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Only check authentication for protected routes
+  const isProtectedRoute = request.nextUrl.pathname.startsWith("/dashboard")
+  const isAuthRoute = request.nextUrl.pathname.startsWith("/auth/")
 
-  // Protect dashboard routes
-  if (request.nextUrl.pathname.startsWith("/dashboard")) {
-    if (!user) {
+  if (isProtectedRoute || isAuthRoute) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    // Protect dashboard routes
+    if (isProtectedRoute && !user) {
       return NextResponse.redirect(new URL("/auth/login", request.url))
     }
-  }
 
-  // Redirect authenticated users away from auth pages
-  if (request.nextUrl.pathname.startsWith("/auth/") && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+    // Redirect authenticated users away from auth pages
+    if (isAuthRoute && user) {
+      // For auth routes, redirect to dashboard without role check to avoid extra DB call
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
   }
 
   return supabaseResponse
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/dashboard/:path*",
+    "/auth/:path*"
+  ],
 }

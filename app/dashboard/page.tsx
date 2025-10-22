@@ -1,13 +1,9 @@
-import { getCurrentUser, getUserRole } from "@/lib/auth-actions"
+import { getCurrentUserWithRole } from "@/lib/auth-actions"
 import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser()
-  const role = await getUserRole()
-
-  if (!user) {
-    redirect("/auth/login")
-  }
+  // Since middleware already checks authentication, we only need to get the role
+  const { role } = await getCurrentUserWithRole()
 
   // Redirect to role-specific dashboard
   if (role === "admin") {

@@ -5,6 +5,8 @@ import { TrainerSidebar } from "@/components/trainer/trainer-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { DietPlanDialog } from "@/components/trainer/diet-plan-dialog"
+import { DietPlanActions } from "@/components/trainer/diet-plan-actions"
 
 export default async function DietPlansPage() {
   const user = await getCurrentUser()
@@ -32,11 +34,36 @@ export default async function DietPlansPage() {
       carbs_grams,
       fat_grams,
       created_at,
-      client:clients(user:users(full_name))
+      membership_plan_id,
+      client:clients(user:users(full_name)),
+      membership_plan:membership_plans(plan_name, price, duration_days)
     `,
     )
     .eq("trainer_id", trainerProfile?.id)
     .order("created_at", { ascending: false })
+
+  // Fetch clients for the dialog
+  const { data: clients } = await supabase
+    .from("clients")
+    .select(`
+      id,
+      user:users(full_name)
+    `)
+    .eq("assigned_trainer_id", trainerProfile?.id)
+
+  // Fetch membership plans
+  const { data: membershipPlans } = await supabase
+    .from("membership_plans")
+    .select(`
+      id,
+      plan_name,
+      description,
+      price,
+      duration_days,
+      features
+    `)
+    .eq("is_active", true)
+    .order("price", { ascending: true })
 
   return (
     <div className="flex h-screen bg-background">
@@ -45,7 +72,7 @@ export default async function DietPlansPage() {
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">Diet Plans</h1>
-            <Button>Create New Plan</Button>
+            <DietPlanDialog clients={clients || []} membershipPlans={membershipPlans || []} />
           </div>
 
           <Card>
@@ -60,6 +87,7 @@ export default async function DietPlansPage() {
                     <TableRow>
                       <TableHead>Plan Name</TableHead>
                       <TableHead>Client</TableHead>
+                      <TableHead>Membership Plan</TableHead>
                       <TableHead>Daily Calories</TableHead>
                       <TableHead>Protein (g)</TableHead>
                       <TableHead>Carbs (g)</TableHead>
@@ -72,21 +100,35 @@ export default async function DietPlansPage() {
                     {dietPlans?.map((plan) => (
                       <TableRow key={plan.id}>
                         <TableCell className="font-medium">{plan.plan_name}</TableCell>
-                        <TableCell>{plan.client?.user?.full_name || "N/A"}</TableCell>
+                        <TableCell>{(plan.client as any)?.user?.full_name || "N/A"}</TableCell>
+                        <TableCell>
+                          {plan.membership_plan ? 
+                            `${(plan.membership_plan as any).plan_name} (${(plan.membership_plan as any).duration_days} days)` : 
+                            "No membership plan"
+                          }
+                        </TableCell>
                         <TableCell>{plan.daily_calories}</TableCell>
                         <TableCell>{plan.protein_grams}</TableCell>
                         <TableCell>{plan.carbs_grams}</TableCell>
                         <TableCell>{plan.fat_grams}</TableCell>
                         <TableCell>{new Date(plan.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
-                              Edit
-                            </Button>
-                            <Button size="sm" variant="destructive">
-                              Delete
-                            </Button>
-                          </div>
+                          <DietPlanActions 
+                            planId={plan.id}
+                            planName={plan.plan_name}
+                            planData={{
+                              plan_name: plan.plan_name,
+                              description: plan.description,
+                              daily_calories: plan.daily_calories,
+                              protein_grams: plan.protein_grams,
+                              carbs_grams: plan.carbs_grams,
+                              fat_grams: plan.fat_grams,
+                              client_id: (plan.client as any)?.id || "",
+                              membership_plan_id: plan.membership_plan_id
+                            }}
+                            clients={clients || []}
+                            membershipPlans={membershipPlans || []}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

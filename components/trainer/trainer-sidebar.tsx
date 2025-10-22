@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Dumbbell, Users, Apple, MessageSquare, LogOut } from "lucide-react"
+import { Dumbbell, Users, Apple, LogOut } from "lucide-react"
 import { signOut } from "@/lib/auth-actions"
 import { Button } from "@/components/ui/button"
 
@@ -14,7 +14,6 @@ export function TrainerSidebar() {
     { href: "/dashboard/trainer/clients", label: "My Clients", icon: Users },
     { href: "/dashboard/trainer/workout-plans", label: "Workout Plans", icon: Dumbbell },
     { href: "/dashboard/trainer/diet-plans", label: "Diet Plans", icon: Apple },
-    { href: "/dashboard/trainer/messages", label: "Messages", icon: MessageSquare },
   ]
 
   return (

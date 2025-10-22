@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import Link from "next/link"
 
 export default function LoginPage() {
@@ -23,13 +24,28 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
 
-    const result = await signIn(email, password)
+    try {
+      const result = await signIn(email, password)
 
-    if (result.error) {
-      setError(result.error)
+      if (result.error) {
+        setError(result.error)
+        setLoading(false)
+      } else {
+        // Direct redirect to role-specific dashboard to avoid extra redirects
+        const userRole = result.data?.userRole
+        if (userRole === "admin") {
+          router.push("/dashboard/admin")
+        } else if (userRole === "trainer") {
+          router.push("/dashboard/trainer")
+        } else if (userRole === "client") {
+          router.push("/dashboard/client")
+        } else {
+          router.push("/dashboard")
+        }
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.")
       setLoading(false)
-    } else {
-      router.push("/dashboard")
     }
   }
 
@@ -66,7 +82,14 @@ export default function LoginPage() {
             </div>
             {error && <p className="text-destructive text-sm">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  Signing in...
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
           <p className="text-sm text-muted-foreground mt-4 text-center">

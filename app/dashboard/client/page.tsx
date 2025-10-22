@@ -1,4 +1,4 @@
-import { getCurrentUser, getUserRole } from "@/lib/auth-actions"
+import { getCurrentUserWithRole } from "@/lib/auth-actions"
 import { getSupabaseServer } from "@/lib/supabase-server"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,10 +6,10 @@ import { ClientSidebar } from "@/components/client/client-sidebar"
 import { Dumbbell, Apple, TrendingUp, User } from "lucide-react"
 
 export default async function ClientDashboard() {
-  const user = await getCurrentUser()
-  const role = await getUserRole()
+  const { user, role } = await getCurrentUserWithRole()
 
-  if (!user || role !== "client") {
+  // Middleware already checks authentication, just verify role
+  if (role !== "client") {
     redirect("/auth/login")
   }
 

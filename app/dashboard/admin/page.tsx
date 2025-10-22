@@ -1,4 +1,4 @@
-import { getCurrentUser, getUserRole } from "@/lib/auth-actions"
+import { getCurrentUserWithRole } from "@/lib/auth-actions"
 import { getSupabaseServer } from "@/lib/supabase-server"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,10 +6,10 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { Users, Dumbbell, CreditCard, TrendingUp } from "lucide-react"
 
 export default async function AdminDashboard() {
-  const user = await getCurrentUser()
-  const role = await getUserRole()
+  const { user, role } = await getCurrentUserWithRole()
 
-  if (!user || role !== "admin") {
+  // Middleware already checks authentication, just verify role
+  if (role !== "admin") {
     redirect("/auth/login")
   }
 

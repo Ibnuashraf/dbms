@@ -5,6 +5,8 @@ import { TrainerSidebar } from "@/components/trainer/trainer-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { WorkoutPlanDialog } from "@/components/trainer/workout-plan-dialog"
+import { WorkoutPlanActions } from "@/components/trainer/workout-plan-actions"
 
 export default async function WorkoutPlansPage() {
   const user = await getCurrentUser()
@@ -18,6 +20,18 @@ export default async function WorkoutPlansPage() {
 
   // Get trainer profile
   const { data: trainerProfile } = await supabase.from("trainers").select("*").eq("user_id", user.id).single()
+
+  // Fetch assigned clients for the dialog
+  const { data: clients } = await supabase
+    .from("clients")
+    .select(
+      `
+      id,
+      user:users(full_name, email)
+    `,
+    )
+    .eq("assigned_trainer_id", trainerProfile?.id)
+    .order("join_date", { ascending: false })
 
   // Fetch workout plans
   const { data: workoutPlans } = await supabase
@@ -43,7 +57,7 @@ export default async function WorkoutPlansPage() {
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">Workout Plans</h1>
-            <Button>Create New Plan</Button>
+            <WorkoutPlanDialog clients={clients || []} />
           </div>
 
           <Card>
@@ -65,7 +79,7 @@ export default async function WorkoutPlansPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {workoutPlans?.map((plan) => (
+                    {workoutPlans?.map((plan: any) => (
                       <TableRow key={plan.id}>
                         <TableCell className="font-medium">{plan.plan_name}</TableCell>
                         <TableCell>{plan.client?.user?.full_name || "N/A"}</TableCell>
@@ -77,14 +91,7 @@ export default async function WorkoutPlansPage() {
                         </TableCell>
                         <TableCell>{new Date(plan.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
-                              Edit
-                            </Button>
-                            <Button size="sm" variant="destructive">
-                              Delete
-                            </Button>
-                          </div>
+                          <WorkoutPlanActions plan={plan} />
                         </TableCell>
                       </TableRow>
                     ))}
